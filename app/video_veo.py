@@ -25,8 +25,8 @@ def build(photo_path: Path, ad: dict, out_path: Path) -> Path:
         }],
         "parameters": {"aspectRatio": "9:16"},
     }
-    key = {"key": config.GEMINI_API_KEY}
-    r = requests.post(f"{BASE}/models/{config.VEO_MODEL}:predictLongRunning", params=key, json=body, timeout=120)
+    hdr = {"x-goog-api-key": config.GEMINI_API_KEY}
+    r = requests.post(f"{BASE}/models/{config.VEO_MODEL}:predictLongRunning", headers=hdr, json=body, timeout=120)
     if r.status_code != 200:
         raise RuntimeError(f"Veo error {r.status_code}: {r.text[:500]}")
     op = r.json()
@@ -34,11 +34,11 @@ def build(photo_path: Path, ad: dict, out_path: Path) -> Path:
         if op.get("done"):
             break
         time.sleep(10)
-        op = requests.get(f"{BASE}/{op['name']}", params=key, timeout=60).json()
+        op = requests.get(f"{BASE}/{op['name']}", headers=hdr, timeout=60).json()
     if not op.get("done") or "error" in op:
         raise RuntimeError(f"Veo did not finish: {op.get('error', op)}")
     uri = op["response"]["generateVideoResponse"]["generatedSamples"][0]["video"]["uri"]
-    video = requests.get(uri, params=key, timeout=300, allow_redirects=True)
+    video = requests.get(uri, headers=hdr, timeout=300, allow_redirects=True)
     video.raise_for_status()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_bytes(video.content)

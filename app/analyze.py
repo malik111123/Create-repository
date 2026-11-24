@@ -31,7 +31,7 @@ Return ONLY JSON with these keys:
 def _post(payload: dict) -> dict:
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
            f"{config.GEMINI_MODEL}:generateContent")
-    r = requests.post(url, params={"key": config.GEMINI_API_KEY}, json=payload, timeout=120)
+    r = requests.post(url, headers={"x-goog-api-key": config.GEMINI_API_KEY}, json=payload, timeout=120)
     if r.status_code != 200:
         raise RuntimeError(f"Gemini error {r.status_code}: {r.text[:500]}")
     return r.json()
